@@ -198,8 +198,8 @@ func setupNotifier(cfg *config.Config) *notify.Notifier {
 		Type:    "telegram",
 		Enabled: true,
 		Config: map[string]interface{}{
-			"bot_token": "8847844167:AAEERljftJQWz7qCXTOPVg9P_lj0mtoGC2g",
-			"chat_id":   "8392353636",
+			"bot_token": os.Getenv("TELEGRAM_BOT_TOKEN"),
+			"chat_id":   os.Getenv("TELEGRAM_CHAT_ID"),
 		},
 	})
 	return n
@@ -222,6 +222,8 @@ func init() {
 	rootCmd.AddCommand(appsetCmd)
 	rootCmd.AddCommand(rbacCmd)
 	rootCmd.AddCommand(rolloutCmd)
+
+	driftCmd.Flags().StringVarP(&configPath, "config", "c", "config.yaml", "Caminho do config.yaml")
 }
 
 var notifyCmd = &cobra.Command{
@@ -237,8 +239,8 @@ var notifyCmd = &cobra.Command{
 		n.AddChannel(notify.Channel{
 			Name: "telegram", Type: "telegram", Enabled: true,
 			Config: map[string]interface{}{
-				"bot_token": "8847844167:AAEERljftJQWz7qCXTOPVg9P_lj0mtoGC2g",
-				"chat_id":   "8392353636",
+				"bot_token": os.Getenv("TELEGRAM_BOT_TOKEN"),
+				"chat_id":   os.Getenv("TELEGRAM_CHAT_ID"),
 			},
 		})
 		title := args[0]
@@ -274,7 +276,47 @@ var driftCmd = &cobra.Command{
 	Use:   "drift",
 	Short: "Detecta drift entre cluster e manifestos",
 	RunE: func(cmd *cobra.Command, args []string) error {
-		fmt.Println("Drift detection usando kubectl diff")
+		if err := requireProject(cmd); err != nil {
+			return err
+		}
+		cfg, err := config.Load(configPath)
+		if err != nil {
+			cfg, err = config.Load("config.yaml")
+			if err != nil {
+				return fmt.Errorf("erro carregando config: %w", err)
+			}
+		}
+
+		fmt.Printf("Iniciando analise de drift para o projeto: %s\n", projectName)
+		c := &cluster.Cluster{
+			Name: "default",
+			Context: cfg.Cluster.Context,
+			Namespace: cfg.Cluster.Namespace,
+		}
+
+		for _, m := range cfg.Manifests {
+			var fullPath string
+			if filepath.IsAbs(m) {
+				fullPath = m
+			} else {
+				fullPath = filepath.Join(workDir, m)
+			}
+
+			fmt.Printf("\n--- Analisando: %s ---\n", filepath.Base(m))
+			diffOut, err := c.Diff(fullPath)
+			if err != nil {
+				if exitErr, ok := err.(*exec.ExitError); ok && exitErr.ExitCode() == 1 {
+					fmt.Println(diffOut)
+					continue
+				}
+				return fmt.Errorf("erro executando diff: %w (output: %s)", err, diffOut)
+			}
+			if strings.TrimSpace(diffOut) == "" {
+				fmt.Println("Nenhum desvio detectado (Sem drift).")
+			} else {
+				fmt.Println(diffOut)
+			}
+		}
 		return nil
 	},
 }
