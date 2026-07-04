@@ -73,19 +73,6 @@ This sets up the required folders: `manifests/`, `builds/`, `logs/`, and `source
 
 ---
 
-## 💼 Sponsorship & Custom Enterprise Support
-
-Go-K8SDeploy is actively developed and maintained by **Your Net Tec** under the **AGPL License**. 
-
-If you are using this product in mission-critical environments (defense, banking, healthcare) and require professional consulting, custom integration with Hardware Security Modules (HSM), private cloud setups, or custom SLA support, you can sponsor or fund the project using our secure deposit information:
-
-> ### 🏦 Corporate Sponsorship Deposit Information
-> *   **Account Number**: `889582935-9`
-> *   **ACH Routing Number**: `026073150`
-> *   **WIRE Transfer Routing Number**: `026073008`
-> *   **Bank Name**: `Community Federal Savings Bank`
-> *   **Bank Address**: `5 Penn Plaza, New York, NY 10001`
-
 > [!IMPORTANT]
 > **Security Notice**: This information is provided exclusively for corporate sponsorship and contract funding. Your Net Tec will never ask for your cluster credentials, ssh keys, or private KMS keys. Keep your Kubernetes access configurations private and local at all times.
 
