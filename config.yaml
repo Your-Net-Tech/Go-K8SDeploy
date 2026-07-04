@@ -1,0 +1,55 @@
+# ISP-Agentic K8s Deploy Configuration
+# Deterministic deploy pipeline
+
+project: isp-agentic
+
+cluster:
+  context: default
+  namespace: isp-agentic
+
+# Local registry (Kaniko pushes here)
+registry:
+  address: registry.kserver.local:5000
+  insecure: true
+
+# Services to build with Kaniko
+services:
+  - name: backend
+    dockerfile: backend/Dockerfile
+    context: source
+    image: isp-agentic/backend:latest
+
+  - name: bridge-agent
+    dockerfile: bridge-agent/Dockerfile
+    context: source
+    image: isp-agentic/bridge-agent:latest
+
+  - name: frontend-admin
+    dockerfile: frontend-admin/Dockerfile
+    context: source
+    image: isp-agentic/frontend-admin:latest
+
+  - name: frontend-cliente
+    dockerfile: frontend-cliente/Dockerfile
+    context: source
+    image: isp-agentic/frontend-cliente:latest
+
+# Manifests to apply (in order)
+manifests:
+  - manifests/01-namespace.yaml
+  - manifests/02-kaniko-builds.yaml
+  - manifests/03-configmap.yaml
+  - manifests/04-secret.yaml
+  - manifests/05-postgres.yaml
+  - manifests/06-backend.yaml
+  - manifests/07-frontend-admin.yaml
+  - manifests/08-frontend-cliente.yaml
+  - manifests/09-bridge-agent.yaml
+  - manifests/10-registry.yaml
+
+# Pipeline behavior
+pipeline:
+  health_check_timeout: 300s
+  health_check_poll: 10s
+  rollback_on_failure: true
+  keep_build_history: 50

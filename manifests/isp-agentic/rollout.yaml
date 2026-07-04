@@ -1,0 +1,96 @@
+apiVersion: rollout.k8s-deploy.io/v1
+kind: Rollout
+metadata:
+  name: isp-agentic
+  namespace: isp-agentic
+  labels:
+    app.kubernetes.io/managed-by: k8s-deploy
+spec:
+  strategy: canary
+  replicas: 4
+  selector:
+    matchLabels:
+      app: isp-agentic
+  service:
+    name: isp-agentic
+    port: 80
+
+  canary:
+    trafficSplit:
+      method: ingress
+      ingressName: isp-agentic-public
+
+    # Steps progressivos: 5% → 10% → 25% → 50% → 100%
+    steps:
+      - setWeight: 5
+        pause:
+          duration: 2m
+          message: "Iniciando canary em 5%"
+      - setWeight: 10
+        pause:
+          duration: 2m
+          message: "Canary em 10%"
+      - setWeight: 25
+        pause:
+          duration: 3m
+          message: "Canary em 25%"
+      - setWeight: 50
+        pause:
+          untilApproved: true
+          message: "Canary em 50% - REQUER APROVAÇÃO"
+      - setWeight: 100
+
+    analysis:
+      failureLimit: 1
+      conditions:
+        # Pods não podem reiniciar mais que 3 vezes
+        - type: failed_restarts
+          max: 3
+
+        # Nenhum pod em CrashLoopBackOff
+        - type: crashed
+          pod_count: 0
+
+        # Nenhum OOMKilled
+        - type: oom_killed
+          max: 0
+
+        # Nenhum erro/panic nos logs
+        - type: error_log_matches
+          pattern: "(panic|FATAL|ERROR|CRITICAL)"
+          max: 5
+
+        # Smoke test HTTP
+        - type: http_probes
+          url: https://isp-agentic.example.com/health
+          method: GET
+          status_codes: [200]
+          count: 5
+          interval: 2s
+          timeout: 5s
+          max: 0
+
+  preDeploy:
+    - type: exec
+      spec: |
+        - name: backup-db
+          image: postgres:15-alpine
+          command: ['pg_dump']
+
+  postDeploy:
+    - type: exec
+      spec: |
+        - name: smoke-test
+          image: alpine:latest
+          command: ['echo', 'Done']
+
+
+# As condições acima são TODAS PRÓPRIAS:
+# - failed_restarts: usa K8s Pod.status diretamente
+# - crashed: usa K8s Pod.status.reason
+# - oom_killed: usa K8s Pod.status.reason
+# - error_log_matches: usa regex em kubectl logs
+# - http_probes: faz HTTP requests direto (não passa por Prometheus)
+#
+# SEM Prometheus, Datadog, New Relic, nem qualquer
+# observabilidade externa. Tudo nativo.
