@@ -12,6 +12,8 @@
 
 It is the ideal solution for Edge Computing (IoT), financial datacenters, and government/defense private networks requiring strict compliance and data isolation.
 
+![Go-K8SDeploy Live Demo](demo.gif)
+
 ---
 
 ## 🎯 Target Search Keywords / Core Competencies
