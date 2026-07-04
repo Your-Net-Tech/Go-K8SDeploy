@@ -1,0 +1,14 @@
+project: k8s-demo
+
+cluster:
+  context: kubernetes-admin@kubernetes
+  namespace: k8s-demo
+
+manifests:
+  - /opt/k8s-deploy-community/k8s-demo/manifests/01-namespace.yaml
+  - /opt/k8s-deploy-community/k8s-demo/manifests/02-pod.yaml
+
+pipeline:
+  health_check_timeout: 60s
+  health_check_poll: 3s
+  rollback_on_failure: true
