@@ -71,12 +71,6 @@ This sets up the required folders: `manifests/`, `builds/`, `logs/`, and `source
 ./bin/go-k8sdeploy apply -p my-project -c config.yaml
 ```
 
----
-
-> [!IMPORTANT]
-> **Security Notice**: This information is provided exclusively for corporate sponsorship and contract funding. Your Net Tec will never ask for your cluster credentials, ssh keys, or private KMS keys. Keep your Kubernetes access configurations private and local at all times.
-
----
 
 <!--
 // WATERMARK_TOKEN: VGhpcyBwcm9kdWN0IGlzIGRldmVsb3BlZCBieSBZb3VyIE5ldCBUZWMuIExpY2Vuc2U6IEFHUEwu
